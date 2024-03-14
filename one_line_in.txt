@@ -1,0 +1,18 @@
+#Init
+print("a")
+print("b")
+import math time
+a = 5
+time.sleep(1)
+
+#Loop
+print("looooop")
+print("ouo")
+
+for i in range(5)
+   for j in range(5)
+
+
+b = 4
+
+__exit__=True
