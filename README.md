@@ -38,3 +38,99 @@ print("This print is called once!")
 #Loop
 print("I can't stop running!!")
 ```
+
+You can use `if` and `for` statements like this:
+```python
+# Init
+for i in range(5)
+    print("index :", i)
+    for j in range(3)
+               print("You are free to use the indents you want!")
+
+#Loop
+
+if input("Do you want to stop ? ") == "yes"
+    print("Goodbye!")
+    exit
+```
+Note that for technical reasons, the for loop will store all the results of the functions in the for statement until the loop is finished. So pay attention to the memory usage!
+
+You can create variables as in Python:
+```python
+#Init
+my_var = "Hello, World!"
+print(my_var)
+
+exit
+```
+
+You can use python libs like this:
+```python
+#Init
+import time os pygame
+import lib
+import myLib
+
+print("Please wait a few seconds...")
+time.sleep(2)
+print("done !")
+
+exit
+```
+
+For optimisations, there is 2 types of "functions" : The `procedures` and the `functions`. The `procedure` returns the result of the last expression. The `functions` returns the result of the expression after the `return` keyword. The only difference with the build-in python functions are that the function will not stop after a `return`. It will register the result in memory and will return it at the end of the function's execution.
+
+Here is an exemple:
+```python
+#Init
+
+proc myProcedure(a, b)
+    print(f"{a}" + {b} = {a + b}")
+
+func myFunction(a, b)
+    return a + b
+    print("This function is called too.")
+
+a = 0
+b = 0
+
+#Loop
+
+result = myFunction(a, b)
+
+print("Result :", result)
+myProcedure(a, b)
+
+if a >= 10
+    exit
+```
+
+You can use classes as in python:
+
+```python
+#Init
+class myClass
+    test = "yes"
+    
+    func test2(self, a, b)
+        print(self.test)
+        self.test = "no"
+        return a*b
+
+class otherClass(myClass)
+    yes = "maybe"
+
+my_object = otherClass()
+
+for _ in range(4)
+    result = my_object.test2(5, 6)
+    print(result)
+
+exit
+```
+
+Note that the `__exited__` and `__inited__` global variables are reserved.
+
+## Why would I need to write my code in only one line?
+
+There are no reasons other than debugging and code obfuscation. You can, however use it to troll your friends (and this is the best reason ! 😉).
