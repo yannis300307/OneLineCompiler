@@ -1,18 +1,24 @@
 #Init
-print("a")
-print("b")
-import math time
-a = 5
-time.sleep(1)
+proc test(a,b)
+    print(a,"+",b,"=",a+b)
+    print("salut")
 
-#Loop
-print("looooop")
-print("ouo")
+func test2(a, b)
+    print("salut")
+    return a*b
+    if a==2
+        for i in range(b)
+            print("mais oui c'est vraie !!")
 
-for i in range(5)
-   for j in range(5)
+class myClass
+    test = "oui"
+    
+    func test2(self, a, b)
+        print(self.test)
+        self.test = "non"
+        return a*b
 
+class otherClass(myClass)
+    yes = "oui"
 
-b = 4
-
-__exit__=True
+exit
