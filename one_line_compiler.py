@@ -1,4 +1,6 @@
-with open("one_line_in.txt", "r") as file:
+import sys
+
+with open(sys.argv[1], "r") as file:
     data_ = file.read()
 
 
