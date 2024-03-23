@@ -26,7 +26,7 @@ def get_block(i, lines):
     return block_lines, block_head_line, i
 
 
-def eval_block(data, allow_return=False):
+def eval_block(data, allow_return=False, class_=None):
     out = []
     if isinstance(data, str):
         lines = data.split("\n")
@@ -44,9 +44,30 @@ def eval_block(data, allow_return=False):
             block_lines, block_head_line, i = get_block(i, lines)
 
             block = eval_block(block_lines)
-            function_name = block_head_line[4:block_head_line.index("(")]
+            function_name = block_head_line[5:block_head_line.index("(")]
             args = block_head_line[block_head_line.index("(")+1:block_head_line.index(")")]
-            out.append(function_name + ":=lambda " + args + ": (" + ", ".join(block) + ")[-1]")
+            if class_ is not None:
+                out.append(f"setattr({class_}, \"{function_name}\", lambda {args}: ({', '.join(block)})[-1])")
+            else:
+                out.append(function_name + ":=lambda " + args + ": (" + ", ".join(block) + ")[-1]")
+            i -= 1
+        elif j.startswith("class"):
+            block_lines, block_head_line, i = get_block(i, lines)
+
+            class_name = block_head_line.split()[1]
+            class_name = class_name[0:class_name.index("(")] if "(" in class_name else class_name
+
+            block = eval_block(block_lines, class_=class_name)
+
+            if "(" in block_head_line:
+                args = block_head_line[block_head_line.index("(") + 1:block_head_line.index(")")]
+                if len(args.split(",")) > 1:
+                    raise ValueError("Only one parent is accepted for classes.")
+            else:
+                args = None
+
+            out.append(class_name+":=type('" + class_name + "', (" + ("object" if args is None else args) + ", ), {})")
+            out.extend(block)
             i -= 1
         elif j.startswith("func"):
             block_lines, block_head_line, i = get_block(i, lines)
@@ -55,9 +76,12 @@ def eval_block(data, allow_return=False):
             block.insert(0, "__return_value__:=None")
             block.append("__return_value__")
 
-            function_name = block_head_line[4:block_head_line.index("(")]
+            function_name = block_head_line[5:block_head_line.index("(")]
             args = block_head_line[block_head_line.index("(") + 1:block_head_line.index(")")]
-            out.append(function_name + ":=lambda " + args + ": (" + ", ".join(block) + ")[-1]")
+            if class_ is not None:
+                out.append(f"setattr({class_}, \"{function_name}\", lambda {args}: ({', '.join(block)})[-1])")
+            else:
+                out.append(function_name + ":=lambda " + args + ": (" + ", ".join(block) + ")[-1]")
             i -= 1
         elif j.startswith("return"):
             return_expr = j[7:]
@@ -65,12 +89,18 @@ def eval_block(data, allow_return=False):
             out.append(f"(__return_value__:=({return_expr}) if __return_value__ is None else None)")
 
         elif j.startswith("import"):
+            assert class_ is not None, "Imports can't be made inside a class."
             libs = j.split()[1:]
             for lib in libs:
                 out.append(f"{lib}:=__import__(\"{lib}\")")
         elif j.count("=") == 1 and not ((j[0:j.index("=")].count("\"") % 2 == 1 and j[j.index("="):].count("\"") % 2 == 1) or (j[0:j.index("=")].count("'") % 2 == 1 and j[j.index("="):].count("'") % 2 == 1)):
             operands = j.split("=")
-            out.append(operands[0] + ":=" + operands[1])
+            if class_ is not None:
+                out.append(f"setattr({class_}, \"{operands[0][0:operands[0].find(' ')] if operands[0].endswith(' ') else operands[0]}\", {operands[1]})")
+            elif operands[0].count(".") == 1 and operands[0].index(".") != 0:
+                out.append(f"setattr({operands[0][0:operands[0].index('.')]}, \"{operands[0][operands[0].index('.')+1:operands[0].find(' ')] if operands[0].endswith(' ') else operands[0]}\", {operands[1]})")
+            else:
+                out.append(operands[0] + ":=" + operands[1])
         elif j.startswith("for"):
             block_lines, block_head_line, i = get_block(i, lines)
 
