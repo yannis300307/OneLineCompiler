@@ -1,6 +1,11 @@
 import sys
 
-with open(sys.argv[1], "r") as file:
+if len(sys.argv) == 2:
+    file_path = sys.argv[1]
+else:
+    file_path = "one_line_in.txt"
+
+with open(file_path, "r") as file:
     data_ = file.read()
 
 
@@ -25,6 +30,7 @@ def get_block(i, lines):
         if indent >= indent_len:
             block_lines.append(lines[i][indent_len:])
         i += 1
+    i -= 2
     return block_lines, block_head_line, i
 
 
@@ -37,7 +43,7 @@ def eval_block(data, allow_return=False, class_=None):
     else:
         lines = data
     i = 0
-    while i != len(lines):
+    while i < len(lines):
         j = lines[i]
         if j == "" or j.startswith("#") or j.count(" ") == len(j):
             i += 1
@@ -53,8 +59,7 @@ def eval_block(data, allow_return=False, class_=None):
             if class_ is not None:
                 compiled_line = f"setattr({class_}, \"{function_name}\", lambda {args}: ({', '.join(block)},)[-1])"
             else:
-                compiled_line = function_name + ":=lambda " + args + ": (" + ", ".join(block) + ",)[-1]"
-            i -= 1
+                compiled_line = function_name + ":=lambda " + args + ": (" + ", ".join(block) + ", None)[-1]"
         elif j.startswith("class "):
             block_lines, block_head_line, i = get_block(i, lines)
 
@@ -72,8 +77,6 @@ def eval_block(data, allow_return=False, class_=None):
             compiled_line = class_name+":=type('" + class_name + "', (" + ("object" if args is None else args) + ", ), {})"
 
             compiled_block = block
-
-            i -= 1
         elif j.startswith("func "):
             block_lines, block_head_line, i = get_block(i, lines)
 
@@ -87,7 +90,6 @@ def eval_block(data, allow_return=False, class_=None):
                 compiled_line = f"setattr({class_}, \"{function_name}\", lambda {args}: ({', '.join(block)})[-1],)"
             else:
                 compiled_line = function_name + ":=lambda " + args + ": (" + ", ".join(block) + ",)[-1]"
-            i -= 1
         elif j.startswith("return "):
             return_expr = j[7:]
             assert allow_return, "Return is forbidden outside of a function (not procedure)!"
@@ -112,13 +114,11 @@ def eval_block(data, allow_return=False, class_=None):
 
             block = eval_block(block_lines)
             compiled_line = "_:=[(" + ", ".join(block) + ") " + block_head_line + "]"
-            i -= 1
         elif j.startswith("if "):
             block_lines, block_head_line, i = get_block(i, lines)
 
             block = eval_block(block_lines)
             compiled_line = "_:=((" + ", ".join(block) + ") " + block_head_line + " else None)"
-            i -= 1
         else:
             compiled_line = j
         i += 1
@@ -152,9 +152,10 @@ init_lines = eval_block(program_lines[init_start:loop_start+1])
 loop_lines = eval_block(program_lines[loop_start:])
 
 
-## ADD optimisation pour Init only code
-
-result = f"while ('__exit__' not in globals()): _=((" + (f"_:=({','.join(init_lines)}, __inited__:=True) if (not '__inited__' in globals()) else None," if found_init else "") + (f"({','.join(loop_lines)})))" if found_loop else "))")
+if found_loop:
+    result = f"while ('__exit__' not in globals()): _=((" + (f"_:=({','.join(init_lines)}, __inited__:=True) if (not '__inited__' in globals()) else None," if found_init else "") + (f"({','.join(loop_lines)})))" if found_loop else "))")
+else:
+    result = f"_=({', '.join(init_lines)})"
 
 compile(result, "", "exec")  # Final test
 
